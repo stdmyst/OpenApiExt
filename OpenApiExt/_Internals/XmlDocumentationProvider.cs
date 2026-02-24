@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -14,7 +15,7 @@ internal static class XmlDocumentationProvider
     private static readonly MemoryCache XmlDocumentSummariesCache
         = new(new MemoryCacheOptions());
 
-    public static Dictionary<string, string> GetXmlSummaries(Type type) 
+    public static ReadOnlyDictionary<string, string> GetXmlSummaries(Type type) 
         => GetXmlSummaries(type.Assembly);
 
     public static bool TryGetFieldSummary(FieldInfo field, out string? summary)
@@ -29,7 +30,7 @@ internal static class XmlDocumentationProvider
         return xmlSummaries.TryGetValue(GetXmlFieldString(type, field), out summary);
     }
     
-    private static Dictionary<string, string> GetXmlSummaries(Assembly assembly)
+    private static ReadOnlyDictionary<string, string> GetXmlSummaries(Assembly assembly)
     {
         Dictionary<string, string> xmlSummaries;
         
@@ -45,7 +46,7 @@ internal static class XmlDocumentationProvider
             XmlDocumentSummariesCache.Set(assembly, xmlSummaries);
         }
 
-        return new Dictionary<string, string>(xmlSummaries);
+        return new ReadOnlyDictionary<string, string>(xmlSummaries);
     }
 
     private static Dictionary<string, string> GetXmlSummaries(string xmlDocumentationFile)
@@ -75,7 +76,7 @@ internal static class XmlDocumentationProvider
     private static IEnumerable<XElement> GetFields(XDocument document) 
         => document.Descendants(MemberAttribute)
             .Where(m => m.Attribute(NameAttribute)?.Value.Contains(FieldToken) ?? false);
-    
-    public static string GetXmlFieldString(Type type, FieldInfo field) 
+
+    private static string GetXmlFieldString(Type type, FieldInfo field) 
         => $"{FieldToken}{type.FullName}.{field.Name}";
 }
