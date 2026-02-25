@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace OpenApiExt.Transformers;
+namespace OpenApiExt._Internals.Transformers;
 
-public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IOpenApiOperationTransformer
+internal class ResponsesAuthTransformer(bool showRequiredRoles = false) : IOpenApiOperationTransformer
 {
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context,
         CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IO
         {
             var response = new OpenApiResponse
             {
-                Description = isAddRolesToDescription 
+                Description = showRequiredRoles 
                     ? $"Forbidden. Allowed for roles: {string.Join(", ", requiredRoles)}" 
                     : "Forbidden"
             };

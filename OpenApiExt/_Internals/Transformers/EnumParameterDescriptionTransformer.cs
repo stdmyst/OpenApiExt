@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace OpenApiExt.Transformers;
+namespace OpenApiExt._Internals.Transformers;
 
 /// <summary>
 /// Sets enum parameter descriptions using schema <see cref="Consts.XEnumDescriptionExtensionKey"/> extension if presents.
 /// </summary>
 /// <remarks>If a description is already present, for example if the value of an XML param element is specified, it is not overridden.</remarks>
-public class EnumParameterDescriptionTransformer : IOpenApiOperationTransformer
+internal class EnumParameterDescriptionTransformer : IOpenApiOperationTransformer
 {
     /// <inheritdoc />
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context,

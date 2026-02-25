@@ -4,15 +4,14 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
-using OpenApiExt._Internals;
-using OpenApiExt.Extensions;
+using OpenApiExt._Internals.Extensions;
 
-namespace OpenApiExt.Transformers;
+namespace OpenApiExt._Internals.Transformers;
 
 /// <summary>
 /// Changes enum type schemas.
 /// </summary>
-public class EnumSchemaTransformer : IOpenApiSchemaTransformer
+internal class EnumSchemaTransformer : IOpenApiSchemaTransformer
 {
     /// <inheritdoc />
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)

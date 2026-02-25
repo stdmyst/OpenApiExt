@@ -1,9 +1,9 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace OpenApiExt.Extensions;
+namespace OpenApiExt._Internals.Extensions;
 
-public static class TypesExtensions
+internal static class TypesExtensions
 {
     public static bool HasJsonConverterAttribute<T>(this Type type) where T : JsonConverter 
         => type.GetCustomAttributes(false)
