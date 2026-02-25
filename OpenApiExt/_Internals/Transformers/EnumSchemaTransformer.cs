@@ -83,6 +83,6 @@ internal class EnumSchemaTransformer : IOpenApiSchemaTransformer
         schema.Description = sb.ToString();
         
         schema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
-        schema.Extensions.Add(Consts.XEnumDescriptionExtensionKey, new JsonNodeExtension(schema.Description));
+        schema.Extensions.Add(ExtensionKeys.XEnumDescriptionExtensionKey, new JsonNodeExtension(schema.Description));
     }
 }

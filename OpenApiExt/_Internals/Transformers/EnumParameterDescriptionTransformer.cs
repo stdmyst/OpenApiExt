@@ -4,7 +4,7 @@ using Microsoft.OpenApi;
 namespace OpenApiExt._Internals.Transformers;
 
 /// <summary>
-/// Sets enum parameter descriptions using schema <see cref="Consts.XEnumDescriptionExtensionKey"/> extension if presents.
+/// Sets enum parameter descriptions using schema <see cref="ExtensionKeys.XEnumDescriptionExtensionKey"/> extension if presents.
 /// </summary>
 /// <remarks>If a description is already present, for example if the value of an XML param element is specified, it is not overridden.</remarks>
 internal class EnumParameterDescriptionTransformer : IOpenApiOperationTransformer
@@ -20,7 +20,7 @@ internal class EnumParameterDescriptionTransformer : IOpenApiOperationTransforme
         {
             if (parameter.Description is null 
                 && parameter.Schema?.Extensions is not null
-                && parameter.Schema.Extensions.TryGetValue(Consts.XEnumDescriptionExtensionKey, out var value)
+                && parameter.Schema.Extensions.TryGetValue(ExtensionKeys.XEnumDescriptionExtensionKey, out var value)
                 && value is JsonNodeExtension xEnumDescriptionExtension)
             {
                 parameter.Description = xEnumDescriptionExtension.Node.ToString();
