@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using OpenApiExt._Internals.Extensions;
 
 namespace OpenApiExt._Internals.Transformers;
 
@@ -9,31 +10,24 @@ internal class BearerAuthDocumentTransformer : IOpenApiDocumentTransformer
         CancellationToken cancellationToken)
     {
         // Add the security scheme at the document level.
-        var securitySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+        (string Key, OpenApiSecurityScheme Value) securityScheme = ("Bearer", new OpenApiSecurityScheme 
         {
-            ["Bearer"] = new OpenApiSecurityScheme
-            {
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                In = ParameterLocation.Header,
-                BearerFormat = "JWT",
-                Description = "Bearer authorization. Example: \"Authorization: Bearer {token}\""
-            }
-        };
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            In = ParameterLocation.Header,
+            BearerFormat = "JWT",
+            Description = "Bearer authorization. Example: \"Authorization: Bearer {token}\""
+        });
         document.Components ??= new OpenApiComponents();
-        document.Components.SecuritySchemes = securitySchemes;
-
-        // Apply it as a requirement for each operation.
-        foreach (var operation in document.Paths.Values
-                     .Where(path => path.Operations is not null)
-                     .SelectMany(path => path.Operations!))
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes.AddOrUpdate(securityScheme.Key, securityScheme.Value);
+        
+        // Add the security requirement at the document level.
+        document.Security ??= [];
+        document.Security.Add(new OpenApiSecurityRequirement
         {
-            operation.Value.Security ??= [];
-            operation.Value.Security.Add(new OpenApiSecurityRequirement
-            {
-                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-            });
-        }
+            [new OpenApiSecuritySchemeReference(securityScheme.Key, document)] = []
+        });
         
         return Task.CompletedTask;
     }

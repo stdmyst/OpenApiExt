@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using OpenApiExt._Internals.Extensions;
 
 namespace OpenApiExt._Internals.Transformers;
 
@@ -56,7 +57,6 @@ internal class ResponsesAuthTransformer(bool showRequiredRoles = false) : IOpenA
     private void SetResponse(OpenApiOperation operation, (string Key, OpenApiResponse Value) response)
     {
         operation.Responses ??= new OpenApiResponses();
-        operation.Responses.Remove(response.Key);
-        operation.Responses.Add(response.Key, response.Value);
+        operation.Responses.AddOrUpdate(response.Key, response.Value);
     }
 }

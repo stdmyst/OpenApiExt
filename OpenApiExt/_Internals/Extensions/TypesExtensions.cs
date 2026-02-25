@@ -19,4 +19,10 @@ internal static class TypesExtensions
 
         return jsonArray;
     }
+
+    public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> collection, TKey key, TValue value)
+    {
+        collection.Remove(key);
+        collection.Add(key, value);
+    }
 }
