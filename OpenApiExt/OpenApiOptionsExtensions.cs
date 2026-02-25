@@ -19,4 +19,20 @@ public static class OpenApiOptionsExtensions
     public static OpenApiOptions AddAuthResponses(this OpenApiOptions options, bool showRequiredRoles) 
         => options.AddOperationTransformer((operation, context, cancellationToken) => 
             new ResponsesAuthTransformer(showRequiredRoles).TransformAsync(operation, context, cancellationToken));
+
+    public static OpenApiOptions UseFullNameOfTypes(this OpenApiOptions options)
+    {
+        options.CreateSchemaReferenceId = info =>
+        {
+            var type = info.Type;
+            
+            var referenceId = OpenApiOptions.CreateDefaultSchemaReferenceId(info)
+                ?.Replace(type.Name, type.FullName);
+
+            return referenceId;
+        };
+        
+        return options;
+    }
+
 }
