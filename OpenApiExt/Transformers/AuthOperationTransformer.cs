@@ -1,0 +1,57 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
+
+namespace OpenApiExt.Transformers;
+
+public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IOpenApiOperationTransformer
+{
+    public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context,
+        CancellationToken cancellationToken)
+    {
+        var metadata = context.Description.ActionDescriptor.EndpointMetadata;
+        var authorizeAttribute = metadata.OfType<AuthorizeAttribute>()
+            .FirstOrDefault();
+
+        if (authorizeAttribute is not null)
+        {
+            operation.Responses ??= new OpenApiResponses();
+            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+        }
+
+        var requiredRoles = GetRequiredRoles(metadata, authorizeAttribute);
+        if (requiredRoles?.Count > 0)
+        {
+            var response = new OpenApiResponse
+            {
+                Description = isAddRolesToDescription
+                    ? $"Forbidden. Allowed for roles: {string.Join(", ", requiredRoles)}"
+                    : "Forbidden"
+            };
+            operation.Responses ??= new OpenApiResponses();
+            operation.Responses.TryAdd("403", response);
+        }
+
+        return Task.CompletedTask;
+    }
+    
+    private List<string>? GetRequiredRoles(IList<object> metadata, AuthorizeAttribute? authorizeAttribute)
+    {
+        List<string>? roles = null;
+        
+        if (!string.IsNullOrWhiteSpace(authorizeAttribute?.Roles))
+        {
+            roles =  authorizeAttribute.Roles.Split(',').ToList();
+        }
+        else
+        {
+            var authPolicy = metadata.OfType<AuthorizationPolicy>().FirstOrDefault();
+            var authRequirement = authPolicy?.Requirements.FirstOrDefault() as RolesAuthorizationRequirement;
+            if (authRequirement?.AllowedRoles is not null)
+                roles = authRequirement.AllowedRoles.ToList();
+        }
+
+        return roles;
+    }
+}

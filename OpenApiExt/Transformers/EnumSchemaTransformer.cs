@@ -67,7 +67,7 @@ public class EnumSchemaTransformer : IOpenApiSchemaTransformer
         var enumNames = Enum.GetNames(type);
         var enumValues = GetEnumValues(type);
         
-        for (var i = 0;  i < enumNames.Length; i++)
+        for (var i = 0; i < enumNames.Length; i++)
         {
             var name = enumNames[i];
             var field = enumFields.FirstOrDefault(f => f.Name == name);
@@ -84,6 +84,6 @@ public class EnumSchemaTransformer : IOpenApiSchemaTransformer
         schema.Description = sb.ToString();
         
         schema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
-        schema.Extensions.Add(Consts.XEnumDescriptionExtensionKey, new JsonNodeExtension(schema.Description ));
+        schema.Extensions.Add(Consts.XEnumDescriptionExtensionKey, new JsonNodeExtension(schema.Description));
     }
 }
