@@ -4,9 +4,9 @@ using Microsoft.OpenApi;
 namespace OpenApiExt.Transformers;
 
 /// <summary>
-/// Updates enum parameters descriptions using schema <see cref="Consts.XEnumDescriptionExtensionKey"/> extension if presents.
+/// Sets enum parameter descriptions using schema <see cref="Consts.XEnumDescriptionExtensionKey"/> extension if presents.
 /// </summary>
-/// <remarks>It will be used value from param XML element if presents instead.</remarks>
+/// <remarks>If a description is already present, for example if the value of an XML param element is specified, it is not overridden.</remarks>
 public class EnumParameterDescriptionTransformer : IOpenApiOperationTransformer
 {
     /// <inheritdoc />
