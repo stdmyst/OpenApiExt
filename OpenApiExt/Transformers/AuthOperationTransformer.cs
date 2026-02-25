@@ -16,8 +16,7 @@ public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IO
 
         if (authorizeAttribute is not null)
         {
-            operation.Responses ??= new OpenApiResponses();
-            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+            SetResponse(operation, ("401", new OpenApiResponse { Description = "Unauthorized" }));
         }
 
         var requiredRoles = GetRequiredRoles(metadata, authorizeAttribute);
@@ -25,12 +24,11 @@ public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IO
         {
             var response = new OpenApiResponse
             {
-                Description = isAddRolesToDescription
-                    ? $"Forbidden. Allowed for roles: {string.Join(", ", requiredRoles)}"
+                Description = isAddRolesToDescription 
+                    ? $"Forbidden. Allowed for roles: {string.Join(", ", requiredRoles)}" 
                     : "Forbidden"
             };
-            operation.Responses ??= new OpenApiResponses();
-            operation.Responses.TryAdd("403", response);
+            SetResponse(operation, ("403", response));
         }
 
         return Task.CompletedTask;
@@ -53,5 +51,12 @@ public class AuthOperationTransformer(bool isAddRolesToDescription = false) : IO
         }
 
         return roles;
+    }
+
+    private void SetResponse(OpenApiOperation operation, (string Key, OpenApiResponse Value) response)
+    {
+        operation.Responses ??= new OpenApiResponses();
+        operation.Responses.Remove(response.Key);
+        operation.Responses.Add(response.Key, response.Value);
     }
 }
