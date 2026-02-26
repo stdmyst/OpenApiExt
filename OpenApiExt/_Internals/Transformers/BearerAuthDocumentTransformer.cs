@@ -10,12 +10,12 @@ internal class BearerAuthDocumentTransformer : IOpenApiDocumentTransformer
         CancellationToken cancellationToken)
     {
         // Add the security scheme at the document level.
-        (string Key, OpenApiSecurityScheme Value) securityScheme = ("Bearer", new OpenApiSecurityScheme 
+        (string Key, OpenApiSecurityScheme Value) securityScheme = (Consts.BearerSchemeReferenceId, new OpenApiSecurityScheme 
         {
             Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
+            Scheme = Consts.BearerScheme,
             In = ParameterLocation.Header,
-            BearerFormat = "JWT",
+            BearerFormat = Consts.JwtBearerFormat,
             Description = "Bearer authorization. Example: \"Authorization: Bearer {token}\""
         });
         document.Components ??= new OpenApiComponents();
