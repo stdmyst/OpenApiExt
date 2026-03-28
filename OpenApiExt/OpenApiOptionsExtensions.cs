@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
 using OpenApiExt._Internals.Transformers;
 
 namespace OpenApiExt;
@@ -34,5 +35,20 @@ public static class OpenApiOptionsExtensions
         
         return options;
     }
-
+    
+    /// <summary>
+    /// Clear server objects from OpenApi document and set one with relative URL.<br/>
+    /// All paths should be interpreted as relative.
+    /// </summary>
+    /// <remarks>
+    /// It suitable in cases when using proxy.<br/>
+    /// It is also possible to use HTTP Forwarded Headers instead to apply correct headers processing through UseForwardedHeaders middleware.
+    /// </remarks>
+    public static OpenApiOptions UseRelativeServerUrl(this OpenApiOptions options)
+        => options.AddDocumentTransformer((document, _, _) =>
+        {
+            document.Servers = new List<OpenApiServer> { new() { Url = "/" } };
+            
+            return Task.CompletedTask;
+        });
 }
