@@ -6,6 +6,9 @@ namespace OpenApiExt;
 
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Adds conventions for controllers that do not use attribute routing (not decorated with <see cref="ApiControllerAttribute"/> and <see cref="RouteAttribute"/>).
+    /// </summary>
     public static IServiceCollection AddOpenApiMvcConventions(this IServiceCollection services)
         => services.Configure<MvcOptions>(options =>
         {
