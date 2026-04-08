@@ -6,8 +6,20 @@ namespace OpenApiExt;
 
 public static class OpenApiOptionsExtensions
 {
+    public static OpenApiOptions AddDocumentInfo(this OpenApiOptions options,
+        string documentVersion = "v1",
+        string? documentTitle = null)
+    {
+        return options.AddDocumentTransformer((document, context, cancellationToken) => 
+            new DocumentInfoTransformer(documentVersion, documentTitle).TransformAsync(document, context, cancellationToken));
+    }
+
     public static OpenApiOptions AddBearerAuth(this OpenApiOptions options) 
         => options.AddDocumentTransformer<BearerAuthDocumentTransformer>();
+    
+    public static OpenApiOptions AddAuthResponses(this OpenApiOptions options, bool showRequiredRoles) 
+        => options.AddOperationTransformer((operation, context, cancellationToken) => 
+            new ResponsesAuthTransformer(showRequiredRoles).TransformAsync(operation, context, cancellationToken));
 
     public static OpenApiOptions AddEnumDescriptionSupport(this OpenApiOptions options)
     {
@@ -16,10 +28,6 @@ public static class OpenApiOptionsExtensions
 
         return options;
     }
-
-    public static OpenApiOptions AddAuthResponses(this OpenApiOptions options, bool showRequiredRoles) 
-        => options.AddOperationTransformer((operation, context, cancellationToken) => 
-            new ResponsesAuthTransformer(showRequiredRoles).TransformAsync(operation, context, cancellationToken));
 
     public static OpenApiOptions UseFullNameOfTypes(this OpenApiOptions options)
     {
