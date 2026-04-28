@@ -29,14 +29,41 @@ public static class OpenApiOptionsExtensions
         return options;
     }
 
-    public static OpenApiOptions UseFullNameOfTypes(this OpenApiOptions options)
+    /// <summary>
+    /// Changes default schema reference id generation to use full type names.
+    /// </summary>
+    public static OpenApiOptions UseFullTypeNameSchemaReferenceId(this OpenApiOptions options)
     {
         options.CreateSchemaReferenceId = info =>
         {
             var type = info.Type;
+            var defaultReferenceId = OpenApiOptions.CreateDefaultSchemaReferenceId(info);
+
+            // The schema that should be inlined.
+            if (defaultReferenceId is null)
+                return null;
             
-            var referenceId = OpenApiOptions.CreateDefaultSchemaReferenceId(info)
-                ?.Replace(type.Name, type.FullName);
+            string referenceId;
+
+            if (type.IsGenericType && (type.FullName is not null || 
+                                       type.Namespace is not null))
+            { 
+                // Uses fullname to handle nested generic types.
+                var fullName = type.FullName;
+                var pathToType = fullName?[..fullName.IndexOf('`')] ?? type.Namespace;
+                
+                referenceId = $"{pathToType}.{defaultReferenceId}";
+            }
+            else
+            {
+                referenceId = type.FullName ?? type.Name;
+            }
+            
+            if (type.IsNested)
+            {
+                // Replaces the '+' symbol used to mark nested types.
+                referenceId = referenceId.Replace('+', '.');
+            }
 
             return referenceId;
         };
