@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 using OpenApiExt._Internals.Extensions;
+using OpenApiExt._Internals.XmlDocumentation;
 
 namespace OpenApiExt._Internals.Transformers;
 
@@ -13,38 +15,88 @@ namespace OpenApiExt._Internals.Transformers;
 /// </summary>
 internal class EnumSchemaTransformer : IOpenApiSchemaTransformer
 {
+    private const string ListElementToken = "- ";
+    
     /// <inheritdoc />
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
         var type = context.JsonTypeInfo.Type;
 
-        if (!type.IsEnum) return Task.CompletedTask;
-
-        SpecifySchemaType(schema, type);
-
-        if (schema.Enum is null) 
-            SetEnum(schema, type);
+        if (!type.IsEnum) 
+            return Task.CompletedTask;
         
-        SetDescription(schema, type);
+        schema.Type = GetSchemaType(type);
+        schema.Enum ??= GetSchemaEnum(type);
+        
+        var schemaDescription = GenerateSchemaDescription(originalDescription: schema.Description, type);
+        if (!string.IsNullOrEmpty(schemaDescription))
+        {
+            schema.Description = schemaDescription;
+            SetXEnumDescriptionExtension(schema, schemaDescription);
+        }
 
         return Task.CompletedTask;
     }
 
-    private void SpecifySchemaType(OpenApiSchema schema, Type type)
-    {
-        schema.Type = type.HasJsonConverterAttribute<JsonStringEnumConverter>() 
+    private JsonSchemaType GetSchemaType(Type type)
+        => type.HasJsonConverterAttribute<JsonStringEnumConverter>() 
             ? JsonSchemaType.String 
             : JsonSchemaType.Integer;
-    }
 
-    private void SetEnum(OpenApiSchema schema, Type type)
+    private IList<JsonNode> GetSchemaEnum(Type type)
     {
         var jsonArray = type.HasJsonConverterAttribute<JsonStringEnumConverter>()
-            ? Enum.GetNames(type).ToJsonArray()
+            ? GetEnumNames(type).ToJsonArray()
             : GetEnumValues(type).ToJsonArray();
         
-        schema.Enum = jsonArray!;
+        return jsonArray as IList<JsonNode>;
     }
+
+    private string? GenerateSchemaDescription(string? originalDescription, Type type)
+    {
+        var enumFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+        var enumNames = GetEnumNames(type);
+        var enumValues = GetEnumValues(type);
+        
+        var sb = new StringBuilder();
+        
+        sb.Append(!string.IsNullOrWhiteSpace(originalDescription) 
+            ? originalDescription 
+            : type.Name);
+
+        for (var i = 0; i < enumNames.Length; i++)
+        {
+            var name = enumNames[i];
+            var field = enumFields.FirstOrDefault(f => f.Name == name);
+            
+            if (field == null)
+                return originalDescription;
+            
+            var description = field.GetCustomAttribute<DescriptionAttribute>()?.Description;
+            
+            AddNewLine(sb);
+            AddEnumValueNameMapLine(sb, enumValues[i], name);
+            
+            // Use DescriptionAttribute value if presents.
+            if (description != null)
+                AddEnumElementDescription(sb, description);
+            
+            // Search summary in XML documentation.
+            else if (XmlDocumentationProvider.TryGetFieldSummary(field, out var xmlSummary))
+                AddEnumElementDescription(sb, xmlSummary!);
+        }
+        
+        return sb.ToString();
+    }
+
+    private void SetXEnumDescriptionExtension(OpenApiSchema schema, string description)
+    {
+        schema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+        schema.Extensions.Add(ExtensionKeys.XEnumDescriptionExtensionKey, new JsonNodeExtension(description));
+    }
+
+    private string[] GetEnumNames(Type type) 
+        => Enum.GetNames(type);
 
     private List<int> GetEnumValues(Type type)
     {
@@ -54,35 +106,13 @@ internal class EnumSchemaTransformer : IOpenApiSchemaTransformer
         
         return result;
     }
-
-    private void SetDescription(OpenApiSchema schema, Type type)
-    {
-        var sb = new StringBuilder();
-        
-        if (!string.IsNullOrWhiteSpace(schema.Description))
-            sb.Append(schema.Description);
-        
-        var enumFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
-        var enumNames = Enum.GetNames(type);
-        var enumValues = GetEnumValues(type);
-        
-        for (var i = 0; i < enumNames.Length; i++)
-        {
-            var name = enumNames[i];
-            var field = enumFields.FirstOrDefault(f => f.Name == name);
-            var description = field?.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            if (field == null) return;
-            
-            if (description != null)
-                sb.Append(Consts.NewLine + $"- {enumValues[i]} = {name} {Environment.NewLine}*{description}*");
-            else if (XmlDocumentationProvider.TryGetFieldSummary(field, out var xmlSummary))
-                sb.Append(Consts.NewLine + $"- {enumValues[i]} = {name} {Environment.NewLine}*{xmlSummary}*");
-            else return;
-        }
-        
-        schema.Description = sb.ToString();
-        
-        schema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
-        schema.Extensions.Add(ExtensionKeys.XEnumDescriptionExtensionKey, new JsonNodeExtension(schema.Description));
-    }
+    
+    private void AddNewLine(StringBuilder sb) 
+        => sb.Append(Consts.NewLine);
+    
+    private void AddEnumValueNameMapLine(StringBuilder sb, int value, string name) 
+        => sb.Append($"{ListElementToken}{value} = {name}");
+    
+    private void AddEnumElementDescription(StringBuilder sb, string description) 
+        => sb.Append($" ({description})");
 }
