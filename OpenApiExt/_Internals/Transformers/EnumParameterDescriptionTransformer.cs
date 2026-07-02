@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using OpenApiExt.Models;
 
 namespace OpenApiExt._Internals.Transformers;
 

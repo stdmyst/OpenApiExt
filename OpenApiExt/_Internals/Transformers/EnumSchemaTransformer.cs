@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 using OpenApiExt._Internals.Extensions;
 using OpenApiExt._Internals.XmlDocumentation;
+using OpenApiExt.Models;
 
 namespace OpenApiExt._Internals.Transformers;
 

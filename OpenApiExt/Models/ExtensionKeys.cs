@@ -1,4 +1,4 @@
-﻿namespace OpenApiExt;
+﻿namespace OpenApiExt.Models;
 
 public static class ExtensionKeys
 {
