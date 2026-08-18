@@ -35,7 +35,7 @@ internal class ResponsesAuthTransformer(bool showRequiredRoles = false) : IOpenA
         return Task.CompletedTask;
     }
     
-    private List<string>? GetRequiredRoles(IList<object> metadata, AuthorizeAttribute? authorizeAttribute)
+    private static List<string>? GetRequiredRoles(IList<object> metadata, AuthorizeAttribute? authorizeAttribute)
     {
         List<string>? roles = null;
         
@@ -54,7 +54,7 @@ internal class ResponsesAuthTransformer(bool showRequiredRoles = false) : IOpenA
         return roles;
     }
 
-    private void SetResponse(OpenApiOperation operation, (string Key, OpenApiResponse Value) response)
+    private static void SetResponse(OpenApiOperation operation, (string Key, OpenApiResponse Value) response)
     {
         operation.Responses ??= new OpenApiResponses();
         operation.Responses.AddOrUpdate(response.Key, response.Value);

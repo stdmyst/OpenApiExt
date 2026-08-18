@@ -60,7 +60,7 @@ internal class EnumDescriptionTransformer : IOpenApiSchemaTransformer, IOpenApiO
         return Task.CompletedTask;
     }
 
-    private string? GenerateSchemaDescription(string? originalDescription, Type type)
+    private static string? GenerateSchemaDescription(string? originalDescription, Type type)
     {
         var enumFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
         var enumNames = TypesExtensions.GetEnumNames(type);
@@ -97,19 +97,19 @@ internal class EnumDescriptionTransformer : IOpenApiSchemaTransformer, IOpenApiO
         return sb.ToString();
     }
 
-    private void SetXEnumDescriptionExtension(OpenApiSchema schema, string description)
+    private static void SetXEnumDescriptionExtension(OpenApiSchema schema, string description)
     {
         schema.Extensions ??= new Dictionary<string, IOpenApiExtension>();
         schema.Extensions.Add(ExtensionKeys.XEnumDescriptionExtensionKey, new JsonNodeExtension(description));
     }
     
-    private void AddNewLine(StringBuilder sb) 
+    private static void AddNewLine(StringBuilder sb) 
         => sb.Append(Consts.NewLine);
     
-    private void AddEnumValueNameMapLine(StringBuilder sb, long value, string name) 
+    private static void AddEnumValueNameMapLine(StringBuilder sb, long value, string name) 
         => sb.Append($"{ListElementToken}{value} = {name}");
     
-    private void AddEnumElementDescription(StringBuilder sb, string description) 
+    private static void AddEnumElementDescription(StringBuilder sb, string description) 
         => sb.Append($" ({description})");
 
     #endregion
