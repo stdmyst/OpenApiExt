@@ -4,7 +4,7 @@ using Microsoft.OpenApi;
 
 namespace OpenApiExt._Internals.Transformers;
 
-public class DocumentInfoTransformer(string documentVersion = "v1", string? documentTitle = null) : IOpenApiDocumentTransformer
+internal class DocumentInfoTransformer(string documentVersion = "v1", string? documentTitle = null) : IOpenApiDocumentTransformer
 {
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context,
         CancellationToken cancellationToken)

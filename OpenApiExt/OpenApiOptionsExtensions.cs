@@ -8,61 +8,65 @@ namespace OpenApiExt;
 
 public static class OpenApiOptionsExtensions
 {
-    public static OpenApiOptions AddDocumentInfo(this OpenApiOptions options,
-        string documentVersion = "v1",
-        string? documentTitle = null) 
-        => options.AddDocumentTransformer((document, context, cancellationToken) => 
-            new DocumentInfoTransformer(documentVersion, documentTitle).TransformAsync(document, context, cancellationToken));
-
-    public static OpenApiOptions AddBearerAuth(this OpenApiOptions options)
-        => options.AddDocumentTransformer<BearerAuthDocumentTransformer>();
-
-    public static OpenApiOptions AddAuthResponses(this OpenApiOptions options, bool showRequiredRoles)
-        => options.AddOperationTransformer((operation, context, cancellationToken) =>
-            new ResponsesAuthTransformer(showRequiredRoles).TransformAsync(operation, context, cancellationToken));
-
-    public static OpenApiOptions AddEnumDescriptionSupport(this OpenApiOptions options)
+    extension(OpenApiOptions options)
     {
-        options.AddSchemaTransformer<EnumSchemaTransformer>();
-        options.AddOperationTransformer<EnumParameterDescriptionTransformer>();
+        public OpenApiOptions AddDocumentInfo(string documentVersion = "v1", string? documentTitle = null) 
+            => options.AddDocumentTransformer((document, context, cancellationToken) => 
+                new DocumentInfoTransformer(documentVersion, documentTitle).TransformAsync(document, context, cancellationToken));
 
-        return options;
-    }
-    
-    /// <summary>
-    /// Clear server objects from OpenApi document and set one with relative URL.<br/>
-    /// All paths should be interpreted as relative.
-    /// </summary>
-    /// <remarks>
-    /// It suitable in cases when using proxy.<br/>
-    /// It is also possible to use HTTP Forwarded Headers instead to apply correct headers processing through UseForwardedHeaders middleware.
-    /// </remarks>
-    public static OpenApiOptions UseRelativeServerUrl(this OpenApiOptions options)
-        => options.AddDocumentTransformer((document, _, _) =>
+        public OpenApiOptions AddBearerAuth()
+            => options.AddDocumentTransformer<BearerAuthDocumentTransformer>();
+
+        public OpenApiOptions AddAuthResponses(bool showRequiredRoles)
+            => options.AddOperationTransformer((operation, context, cancellationToken) => 
+                new ResponsesAuthTransformer(showRequiredRoles).TransformAsync(operation, context, cancellationToken));
+
+        /// <summary>
+        /// Adds name - value descriptions for enum types.
+        /// </summary>
+        public OpenApiOptions AddEnumDescriptionSupport()
         {
-            document.Servers = new List<OpenApiServer> { new() { Url = "/" } };
+            options.AddSchemaTransformer<EnumDescriptionTransformer>();
+            options.AddOperationTransformer<EnumDescriptionTransformer>();
 
-            return Task.CompletedTask;
-        });
+            return options;
+        }
 
-    public static OpenApiOptions ConfigureSchemaReferenceIdGeneration(this OpenApiOptions openApiOptions, SchemaReferenceIdGenerationOptions schemaGenerationOptions)
-    {
-        openApiOptions.CreateSchemaReferenceId = jsonTypeInfo =>
+        /// <summary>
+        /// Clear server objects from OpenApi document and set one with relative URL.<br/>
+        /// All paths should be interpreted as relative.
+        /// </summary>
+        /// <remarks>
+        /// It suitable in cases when using proxy.<br/>
+        /// It is also possible to use HTTP Forwarded Headers instead to apply correct headers processing through UseForwardedHeaders middleware.
+        /// </remarks>
+        public OpenApiOptions UseRelativeServerUrl() 
+            => options.AddDocumentTransformer((document, _, _) =>
+            {
+                document.Servers = new List<OpenApiServer> { new() { Url = "/" } };
+                
+                return Task.CompletedTask;
+            });
+
+        public OpenApiOptions ConfigureSchemaReferenceIdGeneration(SchemaReferenceIdGenerationOptions schemaGenerationOptions)
         {
-            var type = jsonTypeInfo.Type;
+            options.CreateSchemaReferenceId = jsonTypeInfo =>
+            {
+                var type = jsonTypeInfo.Type;
 
-            // NOTE: A null value indicates that the schema should be inlined.
-            if (schemaGenerationOptions.UseInlineEnums && type.IsEnum)
-                return null;
+                // NOTE: A null value indicates that the schema should be inlined.
+                if (schemaGenerationOptions.UseInlineEnums && type.IsEnum)
+                    return null;
             
-            return schemaGenerationOptions.UseFullTypeNames 
-                ? GetFullTypeNameReferenceId(jsonTypeInfo) 
-                : OpenApiOptions.CreateDefaultSchemaReferenceId(jsonTypeInfo);
-        };
+                return schemaGenerationOptions.UseFullTypeNames 
+                    ? GetFullTypeNameReferenceId(jsonTypeInfo) 
+                    : OpenApiOptions.CreateDefaultSchemaReferenceId(jsonTypeInfo);
+            };
 
-        return openApiOptions;
+            return options;
+        }
     }
-    
+
     private static string? GetFullTypeNameReferenceId(JsonTypeInfo jsonTypeInfo)
     {
         var type = jsonTypeInfo.Type;

@@ -1,25 +1,28 @@
-﻿using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-
-namespace OpenApiExt._Internals.Extensions;
+﻿namespace OpenApiExt._Internals.Extensions;
 
 internal static class TypesExtensions
 {
-    public static bool HasJsonConverterAttribute<T>(this Type type) where T : JsonConverter 
-        => type.GetCustomAttributes(false)
-                .OfType<JsonConverterAttribute>()
-                .FirstOrDefault(converter => converter.ConverterType == typeof(T)) 
-            is not null;
-
-    public static JsonArray ToJsonArray<T>(this IEnumerable<T> elements)
+    extension(Type type)
     {
-        var jsonArray = new JsonArray();
-        foreach (var element in elements)
-            jsonArray.Add(element);
+        public List<string> GetEnumNames()
+        {
+            if (!type.IsEnum) throw new ArgumentException($"{type} must be an enum.");
+        
+            var names = Enum.GetNames(type);
+        
+            return names.ToList();
+        }
 
-        return jsonArray;
+        public List<long> GetEnumValues()
+        {
+            if (!type.IsEnum) throw new ArgumentException($"{type} must be an enum.");
+        
+            var values = Enum.GetValues(type).Cast<object>().Select(Convert.ToInt64);
+        
+            return values.ToList();
+        }
     }
-
+    
     public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> collection, TKey key, TValue value)
     {
         collection.Remove(key);
